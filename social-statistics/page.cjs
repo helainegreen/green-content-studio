@@ -1,0 +1,69 @@
+'use strict';
+const {windowFor,instagramLink,demographicDistribution}=require('./model.cjs');
+const escape=value=>String(value??'').replace(/[&<>"']/g,character=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[character]));
+const number=value=>typeof value==='number'&&Number.isFinite(value)?value.toLocaleString('pt-BR'):'—';
+const date=(value,time=false)=>new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',
+  month:'2-digit',year:'numeric',...(time?{hour:'2-digit',minute:'2-digit'}:{})}).format(new Date(value));
+function demographicsCard(rows,dimension) {
+  const title=dimension==='gender'?'Gênero dos seguidores':'Faixa etária dos seguidores';
+  const distribution=demographicDistribution(rows,dimension);
+  const content=!distribution?'<p>Dados ainda não disponíveis nesta coleta.</p>':
+    `<ul class="gcss-demographics">${distribution.rows.map(row=>`<li><div class="gcss-demographic-label"><span>${escape(row.label)}</span><strong>${row.percentage===null?'—':row.percentage.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'}</strong></div><div class="gcss-demographic-track" aria-hidden="true"><span style="width:${row.percentage===null?0:row.percentage.toFixed(3)}%"></span></div><span class="gcss-demographic-count">${number(row.value)} seguidores</span></li>`).join('')}</ul><p class="muted">Base desta distribuição: <strong>${number(distribution.total)} seguidores</strong>. Categorias ausentes não são estimadas.</p>`;
+  return `<section class="card"><h3>${title}</h3>${content}</section>`;
+}
+function followerChart(history) {
+  const rows=history.filter(item=>item.followers!==null);
+  if(rows.length<2) return '<p>O gráfico será formado após duas coletas em dias diferentes.</p>';
+  const minimum=Math.min(...rows.map(row=>row.followers)),maximum=Math.max(...rows.map(row=>row.followers));
+  const first=Date.parse(rows[0].date+'T12:00:00Z'),last=Date.parse(rows.at(-1).date+'T12:00:00Z');
+  if(last<=first) return '<p>Histórico em formação.</p>';
+  const points=rows.map(row=>`${24+(Date.parse(row.date+'T12:00:00Z')-first)/(last-first)*632},${146-(row.followers-minimum)/Math.max(1,maximum-minimum)*100}`);
+  return `<figure class="gcss-chart"><svg viewBox="0 0 680 180" role="img" aria-label="Evolução dos seguidores nos dias registrados"><path d="M24 156H656" stroke="#dce3d7" fill="none"/><polyline points="${points.join(' ')}" fill="none" stroke="#245b45" stroke-width="3"/>${points.map((point,index)=>`<circle cx="${point.split(',')[0]}" cy="${point.split(',')[1]}" r="4" fill="#245b45"><title>${escape(rows[index].date)}: ${number(rows[index].followers)} seguidores</title></circle>`).join('')}</svg><figcaption>De ${date(rows[0].date+'T12:00:00Z')} a ${date(rows.at(-1).date+'T12:00:00Z')}. Dias sem coleta não são estimados.</figcaption></figure>`;
+}
+function renderPage({client,snapshot,history=[],sync=null,connection=null,days=30,sort='reach',now=new Date()}) {
+  const href=`/clients/${encodeURIComponent(client.slug)}/statistics`;
+  const clientPath=`/clients/${encodeURIComponent(client.slug)}`;
+  const connectionPath=`/clients/${encodeURIComponent(client.slug)}/connections`;
+  const controls=`<form class="gcss-controls" method="get" action="${href}"><label>Período<select name="days"><option value="7"${days===7?' selected':''}>Últimos 7 dias completos</option><option value="30"${days===30?' selected':''}>Últimos 30 dias completos</option></select></label><input type="hidden" name="sort" value="${escape(sort)}"><button class="btn secondary" type="submit">Aplicar período</button></form>`;
+  const account=connection?.account_name||snapshot?.profile?.username||'Instagram';
+  const header=`<div class="gcss-header"><div><p class="gcss-eyebrow">${escape(client.name)} / Instagram</p><h1>Estatísticas</h1><p>Alcance, audiência e desempenho de ${escape(account)}.</p></div><a class="btn secondary" href="${clientPath}">Voltar ao cliente</a></div>${controls}`;
+  if(!snapshot) {
+    const connected=connection?.status==='connected'&&connection?.insights===true;
+    const title=connected?'Aguardando a primeira coleta':'Conecte o Instagram profissional';
+    const message=connected?'Os indicadores aparecerão após a primeira sincronização automática.':
+      'Vincule a Página do Facebook e o Instagram deste cliente para iniciar as estatísticas.';
+    return `<div class="gcss">${styles}${header}<section class="card"><h2>${title}</h2><p>${message}</p><div class="actions"><a class="btn" href="${connectionPath}">${connected?'Ver conexão':'Conectar Facebook e Instagram'}</a></div><p class="muted">Dados indisponíveis são exibidos como “—”, nunca como zero.</p></section></div>`;
+  }
+  const collected=snapshot.collected_at;
+  const old=collected&&(+now-Date.parse(collected)>8*60*60*1000||snapshot.window.until!==windowFor(days,now).until);
+  const failed=sync&&!['ok','partial'].includes(sync.status);
+  const warning=old||failed?`<div class="warn">${sync?.status==='reconnect'?'A conexão precisa ser validada. ':''}Exibindo a última coleta disponível.</div>`:'';
+  const partial=snapshot.partial?'<div class="warn">Alguns dados estão indisponíveis ou a lista de publicações está incompleta. Os demais indicadores continuam disponíveis.</div>':'';
+  const cards=[['Seguidores atuais',snapshot.profile.followers,'Total observado na última coleta'],
+    ['Visualizações',snapshot.metrics.views,'Vezes em que o conteúdo foi exibido'],
+    ['Contas alcançadas',snapshot.metrics.reach,'Contas únicas no período'],
+    ['Interações',snapshot.metrics.total_interactions,'Total informado pela Meta no período']];
+  const change=snapshot.follower_change;
+  const changeKnown=change.gained!==null&&change.lost!==null;
+  const cities=snapshot.cities===null?null:[...snapshot.cities].sort((left,right)=>right.value-left.value).slice(0,10);
+  const posts=[...snapshot.posts.items].sort((left,right)=>(right.metrics?.[sort]??-1)-(left.metrics?.[sort]??-1)||
+    Date.parse(right.timestamp)-Date.parse(left.timestamp));
+  const freshness=`<p class="gcss-freshness">Período: <strong>${date(snapshot.window.since*1000)} a ${date(snapshot.window.until*1000)}</strong> · Brasília<br>Consultado em ${date(collected,true)} · Coleta automática a cada 6 horas. A Meta pode levar até 48 horas para consolidar indicadores.</p>`;
+  return `<div class="gcss">${styles}${header}${warning}${partial}${freshness}
+    <div class="gcss-cards">${cards.map(([label,value,hint])=>`<section class="card"><h2>${label}</h2><div class="gcss-number">${number(value)}</div><p>${hint}</p></section>`).join('')}</div>
+    <section class="card gcss-block"><h2>Interações no período</h2><div class="gcss-metrics">${[['Curtidas','likes'],['Comentários','comments'],['Salvamentos','saves'],['Compartilhamentos','shares'],['Contas que interagiram','accounts_engaged']].map(([label,key])=>`<div><strong>${number(snapshot.metrics[key])}</strong><span>${label}</span></div>`).join('')}</div><p class="muted">As categorias e o total são retornados separadamente pela Meta e podem não coincidir.</p></section>
+    <div class="gcss-two"><section class="card"><h2>Movimentação de seguidores</h2><div class="gcss-metrics"><div><strong>${number(change.gained)}</strong><span>Novos seguidores</span></div><div><strong>${number(change.lost)}</strong><span>Deixaram de seguir</span></div><div><strong>${changeKnown?number(change.gained-change.lost):'—'}</strong><span>Saldo do período</span></div></div><p class="muted">A movimentação corresponde ao período selecionado.</p></section>
+    <section class="card"><h2>Principais cidades dos seguidores</h2><p class="muted">Até 10 cidades disponibilizadas pela Meta para a janela demográfica.</p>${cities===null?'<p>Demografia indisponível nesta coleta.</p>':!cities.length?'<p>Nenhuma cidade retornada pela Meta.</p>':`<ol class="gcss-cities">${cities.map(city=>`<li><span>${escape(city.label)}</span><strong>${number(city.value)}</strong></li>`).join('')}</ol>`}</section></div>
+    <section class="gcss-block" aria-labelledby="gcss-audience-title"><h2 id="gcss-audience-title">Perfil dos seguidores</h2><p class="muted">Gênero e faixa etária informados pela Meta para a janela demográfica disponível.</p><div class="gcss-two gcss-audience">${demographicsCard(snapshot.demographics?.gender,'gender')}${demographicsCard(snapshot.demographics?.age,'age')}</div></section>
+    <section class="card gcss-block"><h2>Evolução dos seguidores</h2><p class="muted">Últimos 30 dias registrados desde a ativação da coleta.</p>${followerChart(history)}${history.length?`<details><summary>Consultar valores registrados</summary><table><thead><tr><th>Data</th><th>Seguidores</th></tr></thead><tbody>${history.map(item=>`<tr><td>${date(item.date+'T12:00:00Z')}</td><td>${number(item.followers)}</td></tr>`).join('')}</tbody></table></details>`:''}</section>
+    <section class="card gcss-block"><div class="gcss-header"><div><h2>Desempenho das publicações</h2><p>Posts, carrosséis e Reels publicados no período, inclusive fora do Studio.</p></div><form method="get" action="${href}"><input type="hidden" name="days" value="${days}"><label>Ordenar por<select name="sort">${[['reach','Alcance'],['views','Visualizações'],['total_interactions','Interações']].map(([value,label])=>`<option value="${value}"${value===sort?' selected':''}>${label}</option>`).join('')}</select></label><button class="btn secondary" type="submit">Ordenar</button></form></div><p class="gcss-caption">Os números das publicações são acumulados desde a publicação até a coleta.</p>${!snapshot.posts.complete?'<p class="warn">Lista parcial: a consulta considera até 100 publicações recentes.</p>':''}
+    <div class="gcss-table"><table><thead><tr><th>Publicação</th><th>Visualizações</th><th>Alcance</th><th>Curtidas</th><th>Comentários</th><th>Salvamentos</th><th>Compartilhamentos</th><th>Interações</th></tr></thead><tbody>${posts.length?posts.map(post=>`<tr><td><span class="badge">${escape(post.type)}</span><p>${instagramLink(post.permalink)?`<a href="${escape(instagramLink(post.permalink))}" target="_blank" rel="noopener noreferrer">${escape(post.caption.slice(0,140)||'Abrir publicação')}</a>`:escape(post.caption.slice(0,140)||'Publicação')}<br><small>${date(post.timestamp,true)}</small></p></td>${['views','reach','likes','comments','saved','shares','total_interactions'].map(key=>`<td>${number(post.metrics?.[key])}</td>`).join('')}</tr>`).join(''):'<tr><td colspan="8">Nenhuma publicação disponível para este período.</td></tr>'}</tbody></table></div></section>
+    <p class="muted gcss-footer">Fonte: API oficial do Instagram. “—” indica dado indisponível. Os dados são isolados por cliente.</p></div>`;
+}
+const styles=`<style>
+main:has(> .gcss){width:calc(100% - 36px);max-width:1180px}.gcss{max-width:1180px;margin:auto}.gcss-header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:20px}.gcss-header h1{margin-bottom:8px}.gcss-eyebrow{text-transform:uppercase;letter-spacing:0;font-size:12px;font-weight:750;margin-bottom:8px}.gcss-controls{display:flex;align-items:flex-end;gap:12px;margin:24px 0 12px}.gcss-controls label{margin:0;min-width:240px}.gcss-freshness{margin-bottom:20px;font-size:13px}.gcss-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.gcss-cards h2{font-size:14px;font-weight:650;color:#526159}.gcss-number{font-size:32px;line-height:1.3;letter-spacing:0;font-weight:750;margin:10px 0}.gcss-cards p{font-size:12px}.gcss-block{margin-top:18px}.gcss-metrics{display:flex;flex-wrap:wrap;gap:18px 32px;margin:18px 0}.gcss-metrics strong{font-size:23px;display:block}.gcss-metrics span{font-size:13px;color:#526159}.gcss-two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.gcss-cities{padding-left:0;list-style:none}.gcss-cities li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf1ea;padding:8px 0;font-size:14px}.gcss-chart{margin:16px 0}.gcss-chart svg{width:100%;max-height:230px}.gcss-chart figcaption{font-size:12px;color:#526159}.gcss details{margin-top:18px}.gcss summary{cursor:pointer;font-weight:650}.gcss-table{overflow-x:auto;margin-top:16px}.gcss table{border-collapse:collapse;width:100%;font-size:13px}.gcss th,.gcss td{padding:12px 10px;border-bottom:1px solid #e5ebe1;text-align:right;vertical-align:top}.gcss th:first-child,.gcss td:first-child{text-align:left;min-width:220px}.gcss th{color:#526159;background:#f6f8f4;white-space:nowrap}.gcss td p{font-size:13px;margin-top:8px}.gcss-caption{font-size:13px}.gcss-footer{margin:20px 0}.gcss .card{min-width:0}.gcss .gcss-header form{display:flex;gap:8px;align-items:flex-end}.gcss .gcss-header form label{margin:0}.gcss-audience{align-items:start}.gcss-audience h3{font-size:18px;margin:0 0 20px}.gcss-demographics{list-style:none;padding:0;margin:0}.gcss-demographics li{margin:0 0 18px}.gcss-demographic-label{display:flex;justify-content:space-between;gap:12px;font-size:14px}.gcss-demographic-label span{overflow-wrap:anywhere}.gcss-demographic-label strong{white-space:nowrap}.gcss-demographic-track{height:8px;background:#edf1ea;border-radius:8px;margin:8px 0 4px;overflow:hidden}.gcss-demographic-track span{height:100%;display:block;background:#245b45;border-radius:8px}.gcss-demographic-count{font-size:12px;color:#526159}
+@media(max-width:1150px){.gcss-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.gcss-two{grid-template-columns:1fr}}@media(max-width:600px){.gcss-header,.gcss-controls{align-items:stretch;flex-direction:column}.gcss-cards{grid-template-columns:1fr 1fr}.gcss-number{font-size:25px}.gcss .card{padding:14px}.gcss-controls label{min-width:0}.gcss-header .btn{justify-content:center}.gcss-cards p{line-height:1.4}.gcss .gcss-header form{flex-wrap:wrap}}
+</style>`;
+module.exports={renderPage,escape};

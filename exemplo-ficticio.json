@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "id": "DEMONSTRACAO-001",
+  "revision": 1,
+  "source": {
+    "type": "green_content_studio",
+    "client_slug": "community",
+    "post_id": "post-ficticio-001",
+    "generation_job_id": "geracao-ficticia-001",
+    "reference": "exemplo-ficticio-studio-local"
+  },
+  "rights_confirmed": true,
+  "timezone": "America/Sao_Paulo",
+  "scheduled_at": "2026-09-25T10:00:00-03:00",
+  "variants": [
+    {
+      "destination": "instagram.feed",
+      "caption": "Exemplo fictício para testar o fluxo editorial. Não publicar.",
+      "ai_generated": false,
+      "paid_partnership": false,
+      "assets": [
+        {
+          "id": "arte-feed-ficticia",
+          "kind": "image",
+          "mime": "image/jpeg",
+          "width": 1080,
+          "height": 1350,
+          "bytes": 400000,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "destination": "instagram.story",
+      "caption": "",
+      "ai_generated": false,
+      "paid_partnership": false,
+      "assets": [
+        {
+          "id": "arte-story-ficticia",
+          "kind": "image",
+          "mime": "image/jpeg",
+          "width": 1080,
+          "height": 1920,
+          "bytes": 400000,
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    {
+      "destination": "facebook.feed",
+      "caption": "Exemplo fictício para testar o fluxo editorial. Não publicar.",
+      "ai_generated": false,
+      "paid_partnership": false,
+      "assets": [
+        {
+          "id": "arte-feed-ficticia",
+          "kind": "image",
+          "mime": "image/jpeg",
+          "width": 1080,
+          "height": 1350,
+          "bytes": 400000,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "destination": "facebook.story",
+      "caption": "",
+      "ai_generated": false,
+      "paid_partnership": false,
+      "assets": [
+        {
+          "id": "arte-story-ficticia",
+          "kind": "image",
+          "mime": "image/jpeg",
+          "width": 1080,
+          "height": 1920,
+          "bytes": 400000,
+          "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    }
+  ]
+}

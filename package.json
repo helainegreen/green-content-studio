@@ -1,0 +1,21 @@
+{
+  "name": "green-content-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "worker": "node worker.js",
+    "test": "node scripts/test.cjs",
+    "check": "node scripts/check.cjs",
+    "simulate": "node build.cjs"
+  },
+  "dependencies": {
+    "adm-zip": "0.6.1",
+    "pg": "^8.13.1"
+  },
+  "description": "Sanitized technical evaluation snapshot of an AI-assisted content operations platform",
+  "engines": {
+    "node": ">=22"
+  }
+}

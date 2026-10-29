@@ -1,0 +1,92 @@
+{
+  "name": "Community News Publicações V1 — Simulação de feed e Stories",
+  "active": false,
+  "nodes": [
+    {
+      "id": "manual",
+      "name": "Simular manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "sample",
+      "name": "Exemplo fictício",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{json:{\"schema_version\":1,\"id\":\"DEMONSTRACAO-001\",\"revision\":1,\"source\":{\"type\":\"green_content_studio\",\"client_slug\":\"community\",\"post_id\":\"post-ficticio-001\",\"generation_job_id\":\"geracao-ficticia-001\",\"reference\":\"exemplo-ficticio-studio-local\"},\"rights_confirmed\":true,\"timezone\":\"America/Sao_Paulo\",\"scheduled_at\":\"2026-09-25T10:00:00-03:00\",\"variants\":[{\"destination\":\"instagram.feed\",\"caption\":\"Exemplo fictício para testar o fluxo editorial. Não publicar.\",\"ai_generated\":false,\"paid_partnership\":false,\"assets\":[{\"id\":\"arte-feed-ficticia\",\"kind\":\"image\",\"mime\":\"image/jpeg\",\"width\":1080,\"height\":1350,\"bytes\":400000,\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]},{\"destination\":\"instagram.story\",\"caption\":\"\",\"ai_generated\":false,\"paid_partnership\":false,\"assets\":[{\"id\":\"arte-story-ficticia\",\"kind\":\"image\",\"mime\":\"image/jpeg\",\"width\":1080,\"height\":1920,\"bytes\":400000,\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}]},{\"destination\":\"facebook.feed\",\"caption\":\"Exemplo fictício para testar o fluxo editorial. Não publicar.\",\"ai_generated\":false,\"paid_partnership\":false,\"assets\":[{\"id\":\"arte-feed-ficticia\",\"kind\":\"image\",\"mime\":\"image/jpeg\",\"width\":1080,\"height\":1350,\"bytes\":400000,\"sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]},{\"destination\":\"facebook.story\",\"caption\":\"\",\"ai_generated\":false,\"paid_partnership\":false,\"assets\":[{\"id\":\"arte-story-ficticia\",\"kind\":\"image\",\"mime\":\"image/jpeg\",\"width\":1080,\"height\":1920,\"bytes\":400000,\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}]}]}}];"
+      }
+    },
+    {
+      "id": "plan",
+      "name": "Validar e montar quatro destinos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "jsCode": "'use strict';\n// Pure planning only: no network, credentials, storage or publishing operations.\nconst DESTINATIONS = ['instagram.feed', 'instagram.story', 'facebook.feed', 'facebook.story'];\nconst SCHEMA_VERSION = 1;\n\nfunction invariant(condition, code) {\n  if (!condition) throw new Error(code);\n}\n\nfunction isoTime(value) {\n  invariant(typeof value === 'string' && /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value), 'explicit_timezone_required');\n  const ms = Date.parse(value);\n  invariant(Number.isFinite(ms), 'invalid_date');\n  const parts = value.match(/^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})/).slice(1).map(Number);\n  const local = new Date(Date.UTC(...[parts[0], parts[1] - 1, ...parts.slice(2)]));\n  invariant(local.getUTCFullYear() === parts[0] && local.getUTCMonth() + 1 === parts[1] && local.getUTCDate() === parts[2] && local.getUTCHours() === parts[3] && local.getUTCMinutes() === parts[4] && local.getUTCSeconds() === parts[5], 'invalid_date');\n  return ms;\n}\n\nfunction validateAsset(asset, destination) {\n  invariant(asset && typeof asset === 'object', 'asset_required');\n  invariant(typeof asset.id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(asset.id), 'invalid_asset_id');\n  invariant(typeof asset.sha256 === 'string' && /^[a-f0-9]{64}$/.test(asset.sha256), 'asset_checksum_required');\n  for (const key of ['width', 'height', 'bytes']) invariant(Number.isSafeInteger(asset[key]) && asset[key] > 0, 'invalid_media_metadata');\n  const ratio = asset.width / asset.height;\n  const story = destination.endsWith('.story');\n  const instagram = destination.startsWith('instagram.');\n  if (asset.kind === 'image') {\n    // Shared editorial profile: JPEG <= 8 MB, even where Facebook permits more.\n    invariant(asset.mime === 'image/jpeg' && asset.bytes <= 8_000_000, 'jpeg_up_to_8mb_required');\n    if (!story && instagram) invariant(ratio >= 0.8 && ratio <= 1.91, 'instagram_feed_aspect_ratio');\n  } else if (asset.kind === 'video') {\n    invariant(['video/mp4', 'video/quicktime'].includes(asset.mime), 'unsupported_video_container');\n    invariant(Number.isFinite(asset.duration_seconds) && asset.duration_seconds >= 3, 'invalid_video_duration');\n    // Stories use the common 3–60s range; Facebook's wider range is not enabled here.\n    invariant(asset.duration_seconds <= (story ? 60 : 900), 'video_too_long_for_profile');\n    invariant(asset.bytes <= (story ? 100_000_000 : 300_000_000), 'video_too_large_for_profile');\n    invariant(Number.isFinite(asset.fps) && asset.fps >= 24 && asset.fps <= 60, 'unsupported_frame_rate');\n    invariant(asset.video_codec === 'h264' && asset.audio_codec === 'aac', 'normalize_video_codecs');\n  } else throw new Error('unsupported_asset_kind');\n  // An editorial requirement, not a claim that both APIs mandate exact 9:16.\n  if (story) invariant(Math.abs(ratio - 9 / 16) < 0.001, 'story_needs_vertical_variant');\n}\n\nfunction validateDraft(draft) {\n  invariant(draft && draft.schema_version === SCHEMA_VERSION, 'unsupported_schema');\n  invariant(typeof draft.id === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(draft.id), 'invalid_draft_id');\n  invariant(Number.isSafeInteger(draft.revision) && draft.revision > 0, 'invalid_revision');\n  invariant(draft.rights_confirmed === true, 'media_rights_not_confirmed');\n  invariant(draft.source && draft.source.type === 'green_content_studio', 'unsupported_source');\n  invariant(draft.source.client_slug === 'community', 'studio_client_out_of_scope');\n  for (const key of ['post_id', 'generation_job_id']) {\n    invariant(typeof draft.source[key] === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(draft.source[key]), 'studio_source_ids_required');\n  }\n  invariant(typeof draft.source.reference === 'string' && draft.source.reference.length > 0 && draft.source.reference.length <= 200, 'source_reference_required');\n  invariant(draft.timezone === 'America/Sao_Paulo', 'editorial_timezone_required');\n  invariant(draft.scheduled_at === null || typeof draft.scheduled_at === 'string', 'schedule_required');\n  if (draft.scheduled_at !== null) isoTime(draft.scheduled_at);\n  invariant(Array.isArray(draft.variants) && draft.variants.length > 0 && draft.variants.length <= 4, 'variants_required');\n  const seen = new Set();\n  for (const variant of draft.variants) {\n    invariant(DESTINATIONS.includes(variant.destination), 'unknown_destination');\n    invariant(!seen.has(variant.destination), 'duplicate_destination');\n    seen.add(variant.destination);\n    invariant(typeof variant.caption === 'string' && [...variant.caption].length <= 2200, 'caption_exceeds_editorial_profile');\n    invariant(typeof variant.ai_generated === 'boolean', 'ai_disclosure_required');\n    invariant(typeof variant.paid_partnership === 'boolean', 'partnership_disclosure_required');\n    invariant(Array.isArray(variant.assets) && variant.assets.length >= 1, 'media_required');\n    const story = variant.destination.endsWith('.story');\n    if (story) {\n      invariant(variant.assets.length === 1, 'one_asset_per_story');\n      invariant(variant.caption === '', 'story_text_must_be_in_media');\n    } else {\n      invariant(variant.assets.length <= 10, 'carousel_limit_in_preparation');\n      if (variant.assets.length > 1) invariant(variant.assets.every(a => a.kind === 'image'), 'mixed_carousel_not_prepared');\n    }\n    invariant(variant.stickers === undefined || (Array.isArray(variant.stickers) && variant.stickers.length === 0), 'stickers_require_manual_handling');\n    for (const asset of variant.assets) validateAsset(asset, variant.destination);\n  }\n  return draft;\n}\n\nfunction planDraft(draft) {\n  validateDraft(draft);\n  return draft.variants.map(variant => {\n    const [network, placement] = variant.destination.split('.');\n    const kind = variant.assets[0].kind;\n    const carousel = variant.assets.length > 1;\n    const operation = network === 'instagram'\n      ? placement === 'story' ? 'ig_story' : carousel ? 'ig_image_carousel' : kind === 'video' ? 'ig_reel_shared_to_feed' : 'ig_feed_image'\n      : placement === 'story' ? kind === 'video' ? 'fb_video_story' : 'fb_photo_story'\n        : carousel ? 'fb_multi_photo_post' : kind === 'video' ? 'fb_feed_video' : 'fb_feed_photo';\n    return {\n      delivery_key: `${draft.id}:${draft.revision}:${variant.destination}`,\n      network, placement, operation, scheduled_at: draft.scheduled_at,\n      required_asset_ids: variant.assets.map(a => a.id),\n      manual_review_reasons: [\n        ...(variant.paid_partnership ? ['partnership_label_capability_not_verified'] : []),\n        ...(network === 'facebook' && variant.ai_generated ? ['facebook_ai_disclosure_not_verified'] : []),\n      ],\n      persistent_state: 'draft',\n    };\n  });\n}\n\nfunction reviewCards(draft) {\n  const jobs = planDraft(draft);\n  return draft.variants.map((variant, index) => ({\n    destination: variant.destination,\n    text: [\n      `Community News • ${draft.id} • versão ${draft.revision}`,\n      `Origem: Green Content Studio • post ${draft.source.post_id} • geração ${draft.source.generation_job_id}`,\n      `Destino: ${variant.destination}`,\n      `Horário: ${draft.scheduled_at || 'a definir antes de autorizar a publicação'}`,\n      `Mídia: ${variant.assets.map(a => a.id).join(', ')}`,\n      `IA declarada: ${variant.ai_generated ? 'sim' : 'não'} | parceria: ${variant.paid_partnership ? 'sim' : 'não'}`,\n      variant.caption || 'Story: texto incorporado à arte/vídeo.',\n    ].join('\\n'),\n    asset_preview_ids: jobs[index].required_asset_ids,\n    proposed_actions: ['Aprovar versão', 'Pedir ajuste', 'Definir horário', 'Rejeitar'],\n    buttons_connected: false,\n  }));\n}\n\nfunction simulate(draft) {\n  return {\n    mode: 'simulation_only', publish_enabled: false,\n    validation_scope: 'declared_metadata_only_not_media_bytes_or_permissions',\n    draft_id: draft.id, revision: draft.revision,\n    jobs: planDraft(draft), review_cards: reviewCards(draft),\n    blockers_before_install: ['verify_media_files_and_hosting', 'connect_persistent_storage',\n      'verify_destination_accounts_and_permissions', 'connect_authenticated_approval_adapter',\n      'implement_and_test_publish_adapters', 'shared_capacity_review'],\n  };\n}\n\n\n\nreturn $input.all().map(item=>({json:simulate(item.json)}));"
+      }
+    },
+    {
+      "id": "note",
+      "name": "Escopo desta preparação",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -340
+      ],
+      "parameters": {
+        "width": 800,
+        "height": 280,
+        "content": "## Somente simulação local\nNão possui token, HTTP Request, banco, bot, webhook ou agendamento.\nNão publica e não envia mensagens. Dados e checksums são fictícios.\nValida metadados declarados; inspeção real da mídia e conectores estão pendentes.\nNão importar em produção sem análise de capacidade e instalação isolada.\nVeja README.md e ARQUITETURA.md."
+      }
+    }
+  ],
+  "connections": {
+    "Simular manualmente": {
+      "main": [
+        [
+          {
+            "node": "Exemplo fictício",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exemplo fictício": {
+      "main": [
+        [
+          {
+            "node": "Validar e montar quatro destinos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 30
+  },
+  "pinData": {},
+  "tags": []
+}

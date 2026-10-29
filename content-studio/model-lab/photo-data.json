@@ -1,0 +1,340 @@
+{
+  "fonts": "",
+  "assets": {
+    "demo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGNQiXalKWIYtWDUglELRi0YtWDUglELRi0YtWDUglELhooFAJ6fEC73y4LcAAAAAElFTkSuQmCC"
+  },
+  "samples": {
+    "belezaessencial": [
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 1,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "ANTES",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 2,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 3,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      }
+    ],
+    "belezadueto": [
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 1,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "ANTES",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 2,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 3,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      }
+    ],
+    "imovelvitrine": [
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "Fictional example",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 1,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "ANTES",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 2,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 3,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      }
+    ],
+    "imovelrevista": [
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "Fictional example",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 1,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "ANTES",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 2,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      },
+      {
+        "name": "Example Studio",
+        "handle": "@example_studio",
+        "logo": {
+          "asset": "demo"
+        },
+        "logoTransparent": false,
+        "title": "",
+        "subtitle": "",
+        "body": "",
+        "stage": "DEPOIS",
+        "disclosure": "Synthetic illustration",
+        "photo": {
+          "asset": "demo"
+        },
+        "before": {
+          "asset": "demo"
+        },
+        "after": {
+          "asset": "demo"
+        },
+        "number": 3,
+        "count": 3,
+        "modality": "venda",
+        "watermark": false,
+        "fit": "cover"
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "fonts": "",
+  "assets": {
+    "demo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGNQiXalKWIYtWDUglELRi0YtWDUglELRi0YtWDUglELhooFAJ6fEC73y4LcAAAAAElFTkSuQmCC"
+  },
+  "identity": {
+    "name": "Example Studio",
+    "handle": "@example_studio",
+    "accent": "#245b45",
+    "logo": ""
+  },
+  "samples": {
+    "cover": {
+      "title": "Demonstration content",
+      "body": "Fictional content for technical evaluation.",
+      "source": "Synthetic example",
+      "photo": "demo",
+      "items": [],
+      "number": 1,
+      "count": 4,
+      "photoY": 50,
+      "highlight": false
+    },
+    "text": {
+      "title": "Demonstration content",
+      "body": "Fictional content for technical evaluation.",
+      "source": "Synthetic example",
+      "photo": "demo",
+      "items": [],
+      "number": 2,
+      "count": 4,
+      "photoY": 50,
+      "highlight": false
+    },
+    "steps": {
+      "title": "Demonstration content",
+      "body": "",
+      "source": "Synthetic example",
+      "photo": "demo",
+      "items": [
+        "Plan",
+        "Review",
+        "Approve"
+      ],
+      "number": 3,
+      "count": 4,
+      "photoY": 50,
+      "highlight": false
+    },
+    "closing": {
+      "title": "Demonstration content",
+      "body": "Fictional content for technical evaluation.",
+      "source": "Synthetic example",
+      "photo": "demo",
+      "items": [],
+      "number": 4,
+      "count": 4,
+      "photoY": 50,
+      "highlight": false
+    }
+  }
+}
